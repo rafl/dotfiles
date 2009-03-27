@@ -1,0 +1,67 @@
+export COLORTERM=yes
+export LINKS_XTERM=screen
+
+OS=${OSTYPE%%[0-9.]*}
+OSVERSION=${OSTYPE#$OS}
+OSMAJOR=${OSVERSION%%.*}
+export OS OSVERSION OSMAJOR HOST
+
+PS1="%n@%m:%4c> "
+
+unset SCREENDIR
+
+if [ -d ~/.local/bin ] ; then
+	PATH=~/.local/bin:"${PATH}"
+fi
+
+if [ -d ~/.local/lib ] ; then
+	LD_LIBRARY_PATH=~/.local/lib:"${LD_LIBRARY_PATH}"
+	PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:"${PKG_CONFIG_PATH}"
+fi
+
+if [ -d ~/.local/share ] ; then
+#	PERL5LIB=~/.local/share/perl5:"${PERL5LIB}"
+	MANPATH=~/.local/share/man:"${MANPATH}"
+fi
+
+export PATH LD_LIBRARY_PATH MONO_PATH PERL5LIB PKG_CONFIG_PATH MANPATH
+
+export TERMINFO=~/.terminfo
+
+setopt completeinword
+
+eval `dircolors -b`
+
+export PAGER='less -r'
+export EDITOR='vim'
+export BROWSER='w3m'
+
+limit coredumpsize 0
+
+umask 066
+
+alias     ..='cd ..'
+alias    ...='cd ../..'
+alias   ....='cd ../../..'
+alias  .....='cd ../../../..'
+alias ......='cd ../../../../..'
+
+alias ls='ls --color=auto'
+alias l='ls'
+alias ll='ls -l'
+alias la='ls -a'
+alias lg='ls -lag'
+alias lld='ls -ld'
+
+alias grep='LC_CTYPE=C grep --color=auto'
+alias zgrep='LC_CTYPE=C zgrep --color=auto'
+
+alias p='pushd'
+alias pd='popd'
+
+
+bindkey -e
+
+compctl -g '*(-/)' + -g '.*(-/)' -v cd pushd rmdir
+compctl -k hosts -x 'p[2,-1]' -l '' -- rsh ssh
+compctl -x 'N[-1,@]' -k hosts - 's[]' -u -qS '@' -- finger

@@ -1,0 +1,198 @@
+export HISTFILE=~/.zsh_history
+export HISTSIZE=10000
+export SAVEHIST=10000
+setopt APPEND_HISTORY
+setopt INC_APPEND_HISTORY
+setopt HIST_FIND_NO_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS
+setopt SHARE_HISTORY
+
+setopt correct
+setopt extended_glob
+setopt nohup
+
+export LANG="C"
+export LC_CTYPE="de_DE.UTF-8"
+export EMAIL="rafl@debian.org"
+export GIT_AUTHOR_EMAIL=$EMAIL
+export GIT_COMMITTER_EMAIL=$EMAIL
+export DEBEMAIL=$EMAIL
+export DEBFULLNAME="Florian Ragwitz"
+export MYKEY=8E635A5E
+export DEBSIGN_KEYID=$MYKEY
+
+export LESS_TERMCAP_mb=$'\E[01;31m'
+export LESS_TERMCAP_md=$'\E[01;31m'
+export LESS_TERMCAP_me=$'\E[0m'
+export LESS_TERMCAP_se=$'\E[0m'
+export LESS_TERMCAP_so=$'\E[01;44;33m'
+export LESS_TERMCAP_ue=$'\E[0m'
+export LESS_TERMCAP_us=$'\E[01;32m'
+
+zstyle ':completion:*' menu yes=long-list
+
+#if [[ "$TERM[(ws:-:)1]" == "screen" ]]; then
+	zstyle ':completion:*' menu select=2
+#fi
+
+setopt AUTO_CD
+
+WORDCHARS="*?_-.[]~=/&;!#$%^(){}<>:\'"
+
+function dick() { uptime | perl -ne "/(\d+) d/;print 8,q(=)x\$1,\"D\n\"" }
+
+function wp() { $BROWSER http://en.wikipedia.org/wiki/$1 }
+
+
+alias ac='apt-cache'
+function aca { apt-cache search $1 | less -S +/$1 }
+function acs { apt-cache show   $1 }
+
+alias -g L="|&$PAGER"
+alias -g H="|head -n"
+alias -g T="|tail -n"
+alias -g G="|&grep"
+alias -g V="|vipe"
+alias -g S="|sort"
+alias -g C="|wc"
+
+alias -s pdf=xpdf
+alias -s tex=$EDITOR
+alias -s txt=$PAGER
+alias -s htm=$BROWSER
+alias -s html=$BROWSER
+
+alias pst='pstree -hup $USER'
+alias psg='ps -u $USER| grep'
+
+alias uupdatedb="updatedb --localpaths='$HOME' --output='$HOME/.locatedb'"
+alias ulocate="locate --database='$HOME/.locatedb'"
+
+CDPATH=projects/perl6:projects/perl:projects/python
+
+bindkey "[5~" history-beginning-search-backward
+bindkey "[6~" history-beginning-search-forward
+bindkey ","   copy-prev-word
+bindkey ","   copy-prev-word
+
+bindkey "[OA"   up-line-or-history
+bindkey "[OB" down-line-or-history
+bindkey "[OA"  up-line-or-history
+bindkey "[OA"  up-line-or-history
+
+autoload -U tetris
+zle -N tetris
+bindkey "^Xt" tetris
+
+
+autoload -U compinit
+compinit -u
+zmodload -i zsh/complist
+
+autoload run-help
+autoload history-search-end
+
+autoload -Uz vcs_info
+
+zstyle ':vcs_info:*' actionformats '%F{5}[%F{2}%b%F{3}|%F{1}%a%F{5}]%f '
+zstyle ':vcs_info:*' formats       '%F{5}[%F{2}%b%F{5}]%f '
+
+compctl -g '*.(mp3|MP3|ogg|OGG|temp|TEMP|m3u|pls)' + -g '*(-/)' mpg123 mpg321 ogg123
+compctl -g '*.pdf' xpdf pdf2ps
+compctl -g '*.(jpg|JPG|jpeg|JPEG|gif|GIF|png|PNG|bmp)' + -g '*(-/)' gimp xv display gqview
+compctl -g '*.dvi' + -g '*(-/)' dvips xdvi gxdvi
+compctl -g '*.ps' + -g '*(-/)' lp gv
+
+zstyle ':completion:*:kill:*' command 'ps xf -u $USER -o pid,%cpu,tty,cputime,cmd'
+zstyle ':completion:*:kill:*' insert-ids single
+zstyle ':completion:*:*:kill:*' menu yes select
+zstyle ':completion:*:kill:*' force-list always
+
+zstyle ':completion:*:*:less:*' menu yes select
+
+function preexec() {
+	if [[ "$TERM[(ws:-:)1]" == "screen" ]]; then
+		local CMD=${1[(wr)^(*=*|sudo|ssh||-*)]}
+		echo -ne "\ek$CMD\e\\"
+	fi
+}
+
+function precmd () {
+	vcs_info
+}
+
+function core_since () {
+	perl -MModule::CoreList -le"print Module::CoreList->first_release(q{$1})"
+}
+
+function version_of () {
+	perl -M$1 -le"print $1->VERSION"
+}
+
+function vimod () {
+	vi $(perl -m$1 -le'my $mod = $ARGV[0]; $mod =~ s{::}{/}g; $mod .= q{.pm}; print $INC{$mod}' $1)
+}
+
+function vibin () {
+	vi $(which $1)
+}
+
+#PROMPT='%n@%m:%4c%1v> '
+#RPROMPT=' %D{%d.%m.%Y} %D{%T}'
+
+function setprompt() {
+	setopt prompt_subst
+	autoload colors zsh/terminfo
+
+	local TITLEBAR=''
+
+	case $TERM in
+		xterm*)
+			TITLEBAR=$'%{\e]0;%(!.-=*[ROOT]*=- | .)%n@%m:%~ \a%}'
+		;;
+		screen*)
+			TITLEBAR=$'%{\e_screen \005 (\005t) | %(!.-=[ROOT]=- | .)%n@%m:%~ \e\\%}'
+		;;
+		rxvt)
+			TITLEBAR=$'%{\e]0;%(!.-=*[ROOT]*=- | .)%n@%m:%~ \a%}'
+		;;
+	esac
+
+	if [[ "$TERM[(ws:-:)1]" == "screen" ]]; then
+		STITLE=$'%{\ekzsh\e\\%}'
+	fi
+
+	autoload colors zsh/terminfo
+	if [[ "$terminfo[colors]" -ge 8 ]]; then
+		colors
+	fi
+
+	for color in BLUE RED GREEN MAGENTA YELLOW; do
+		eval local $color='%{$terminfo[bold]$fg[${(L)color}]%}'
+		eval local LIGHT_$color='%{$fg[${(L)color}]%}'
+		(( count = $count + 1 ))
+	done
+	local NO_COLOR="%{$terminfo[sgr0]%}"
+
+	EXITCODE="%(?..%?%1v )"
+
+	if (( EUID != 0 )); then
+		PROMPT="${STITLE}${TITLEBAR}${RED}${EXITCODE}${GREEN}%n@%m${NO_COLOR} ${MAGENTA}%60<...<%B%~%b%<<${NO_COLOR} ${BLUE}>${NO_COLOR} "
+	else
+		PROMPT="${STITLE}${TITLEBAR}${RED}${EXITCODE}${RED}%n@%m${NO_COLOR} ${MAGENTA}%60<...<%B%~%b%<<${NO_COLOR} ${BLUE}>${NO_COLOR} "
+	fi
+
+	RPROMPT=" ${BLUE}<${NO_COLOR} \${vcs_info_msg_0_}${YELLOW}%D{%d.%m.%y} %D{%T}${NO_COLOR} ${BLUE}>${NO_COLOR}"
+	PS2='\`%_> '
+	PS3='?# '
+	PS4='+%N:%i:%_> '
+}
+
+if [ $TERM = "dumb" ]; then
+    unsetopt zle
+    PS1='$';
+else
+    setprompt
+fi

@@ -1,0 +1,23 @@
+if [ -d /usr/lib/ccache ]; then
+	export PATH="/usr/lib/ccache:$PATH"
+fi
+
+if [ -d ~/.perlmaint-5.10 ]; then
+	export PATH="$HOME/.perlmaint-5.10/bin:$PATH"
+	export MANPATH="$HOME/.perlmaint-5.10/share/man/man1:$HOME/.perlmaint-5.10/share/man/man3:$MANPATH"
+else
+	if [ -d ~/.perl ]; then
+		export PATH="$HOME/.perl/bin:$PATH"
+		export MANPATH="$HOME/.perl/share/man/man1:$HOME/.perl/share/man/man3:$MANPATH"
+	fi
+fi
+
+if [ -x $HOME/.local/RealPlayer/realplay ]; then
+	export PATH="$HOME/.local/RealPlayer:$PATH"
+fi
+
+if [ -d ~/.local/arm-elf ]; then
+	export PATH="$HOME/.local/arm-elf/bin:$PATH"
+fi
+
+typeset -U path
